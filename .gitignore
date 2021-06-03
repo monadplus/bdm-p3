@@ -2,4 +2,6 @@ target/
 .bloop
 .bsp
 .metals
-datasets/lr-model
+
+datasets/*
+!datasets/p3_integrated.csv

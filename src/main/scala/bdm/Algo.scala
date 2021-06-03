@@ -9,11 +9,11 @@ import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.spark.ml.PipelineModel
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.sql.SparkSession
 
-object Kafka extends App {
+object Algo extends App {
+
   val spark: SparkSession =
     SparkSession
       .builder()
@@ -21,10 +21,10 @@ object Kafka extends App {
       .appName("myApp")
       .getOrCreate()
 
-  import spark.implicits._
-
   // 2 seconds since the streaming produces an output every 1 second.
   val sc = new StreamingContext(spark.sparkContext, Seconds(2))
+  // StreamingContext.getOrCreate("datasets/checkpoints",
+  //                              _ => new StreamingContext(spark.sparkContext, Seconds(2)))
 
   Logger.getRootLogger().setLevel(Level.ERROR)
 
@@ -40,8 +40,6 @@ object Kafka extends App {
 
   try {
 
-    val model = PipelineModel.load("datasets/lr-model")
-
     val stream: DStream[KafkaSample] =
       KafkaUtils
         .createDirectStream[String, String](
@@ -51,33 +49,18 @@ object Kafka extends App {
         )
         .map(record => KafkaSample(record))
 
-    stream.foreachRDD { rdd =>
-      // The columns must have the same name as the ones from the pipeline
-      val df = rdd.toDF()
-      val df_pred =
-        model
-          .transform(df)
-          .select("neigh", "price", "prediction")
-          .withColumnRenamed("neigh", "neighborhood")
-          .withColumnRenamed("prediction", "rfd_pred")
+    // Save current state (required by most state operations)
+    sc.checkpoint("datasets/checkpoints")
 
-      df_pred
-        .repartition(1)
-        .write
-        .option("header", true)
-        .mode("append")
-        .csv("datasets/prediction")
-      df_pred.show()
-    }
+    ExponentialDecayingWindow.run(stream)
 
     sc.start()
     sc.awaitTermination()
-
   } catch {
     case e: Throwable =>
       print(e.getMessage())
   } finally {
     // TODO not stopping the stream after Ctr+c
-    sc.stop()
+    sc.stop(stopSparkContext = true)
   }
 }
