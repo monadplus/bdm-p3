@@ -2,3 +2,4 @@ target/
 .bloop
 .bsp
 .metals
+datasets/lr-model
