@@ -52,7 +52,16 @@ object Algo extends App {
     // Save current state (required by most state operations)
     sc.checkpoint("datasets/checkpoints")
 
-    ExponentialDecayingWindow.run(stream)
+    if (args.length != 0) {
+      args(0) match {
+        case "1" => HeavyHitters.run(stream)
+        case "2" => ExponentialDecayingWindow.run(stream)
+        case _   => println("Usage:\n\t1 => HeavyHitters\n\t2 => ExponentialDecayingWindow")
+      }
+    } else {
+      HeavyHitters.run(stream)
+      // ExponentialDecayingWindow.run(stream)
+    }
 
     sc.start()
     sc.awaitTermination()
