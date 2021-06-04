@@ -4,19 +4,29 @@ import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming._
 
 object HeavyHitters {
+  val windowSize = Seconds(20)
+  val minFreq = 0.5
+  val maxSize = 1 / minFreq
+
+  type CC = List[(String, Int)]
+
+  def heavyHitters(a: CC, b: CC): CC = {
+    val ab = a.union(b)
+    if (ab.length > maxSize) {
+      ab.map { case (e, count) => (e, count - 1) }
+        .filter { case (_, count) => count > 0 }
+    } else {
+      ab
+    }
+  }
+
   def run(stream: DStream[KafkaSample]): Unit = {
     stream
       .map { case KafkaSample(neigh, _) =>
-        (neigh, 1)
+        List((neigh, 1))
       }
-      .groupByKeyAndWindow(Seconds(20))
-      .map {case (k, xs) => (k, xs.toList.length)}
-      .foreachRDD { rdd =>
-        val xs: Array[(String, Int)] = rdd.collect()
-        val total = xs.map(_._2).sum
-        val perc = total*0.05
-        val heavyHitters = xs.filter {case (_, count) => count >= perc}.map(_._1)
-        println(heavyHitters.toList)
-      }
+      .reduceByWindow(heavyHitters, windowSize, windowSize)
+      .map(_.map(_._1))
+      .print()
   }
 }
