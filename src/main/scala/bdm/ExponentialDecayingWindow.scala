@@ -5,7 +5,7 @@ import org.apache.spark.streaming.dstream.DStream
 object ExponentialDecayingWindow {
 
   // Decay constant
-  val c = 0.00001
+  val c = 0.2
 
   def go(newValues: Seq[Double], state: Option[Double]): Option[Double] = {
     if (newValues.length == 0) {
