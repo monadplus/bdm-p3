@@ -1,9 +1,58 @@
 * Spark ML
 
-Spark does only work on JDK <= 11.
+This project is build with Scala 2.12.13 and SBT.
+Make sure you have JDK 8,11 installed.
 
-The content of the kafka topic is:
+#+begin_quote
+The code depends on a kafka machine that is only available through UPC's VPN.
+#+end_quote
 
-| date                       | neigh_id |  price |
-|----------------------------+----------+--------|
-| 2021-06-03 10:54:02.202895 | Q2476184 | 244982 |
+** How To Run
+
+The code should run in any installation with only SBT since spark is run in standalone mode.
+
+Install =sbt= following the official documentation [[https://www.scala-sbt.org/download.html][here]] . Then, you can run the code.
+
+#+begin_src sh
+$ sbt
+sbt> compile
+#+end_src
+
+*** Training the Model
+
+#+begin_src sh
+sbt> run
+
+Multiple main classes detected. Select one to run:
+ [1] bdm.Algo
+ [2] bdm.Kafka
+ [3] bdm.Train
+
+3
+#+end_src
+
+*** Predict Streaming Data from Kafka
+
+#+begin_src sh
+sbt> run
+
+Multiple main classes detected. Select one to run:
+ [1] bdm.Algo
+ [2] bdm.Kafka
+ [3] bdm.Train
+
+2
+#+end_src
+
+*** Run the Streaming Algorithms
+
+#+begin_src sh
+sbt> run
+
+Multiple main classes detected. Select one to run:
+ [1] bdm.Algo
+ [2] bdm.Kafka
+ [3] bdm.Train
+
+1
+#+end_src
